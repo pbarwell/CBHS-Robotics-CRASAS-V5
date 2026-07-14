@@ -204,7 +204,7 @@
         320
       ],
       "id": "0bc3bad4-e917-4531-b205-adcb458b1abd",
-      "notes": "Calls Gemini 2.0 Flash with the YouTube URL directly. No download needed. Skips videos flagged as too long/short."
+      "notes": "Calls Gemini with the YouTube URL directly. No download needed. Skips videos flagged as too long/short."
     },
     {
       "parameters": {
@@ -218,7 +218,7 @@
         320
       ],
       "id": "a1e2b9cc-4672-41c2-900c-70272fda602a",
-      "notes": "Now uses Gemini 2.5 Flash for report generation instead of local llama-server."
+      "notes": "Now uses Gemini Flash for report generation instead of local llama-server."
     },
     {
       "parameters": {
