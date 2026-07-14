@@ -57,7 +57,6 @@ Then make it executable by running this once in Terminal:
 ```bash
 chmod +x /path/to/crasas-start.command
 ```
-**Note:** If you install the Stop Command (crasas-stop.command), you will have to use this command with the path to it to make it executable.
 
 You can then launch CRASAS by double-clicking the `.command` file in Finder.
 
@@ -131,6 +130,6 @@ The two API keys need to be pasted directly into the workflow nodes.
 
 ## Stopping n8n
 
-**macOS:** Run `crasas-stop.command` or press `Ctrl+C` in the Terminal window where n8n is running.
+**macOS:** Press `Ctrl+C` in the Terminal window where n8n is running.
 
-**Windows:** Run `crasas-stop.bat`, or close the Command Prompt window where n8n is running.
+**Windows:** Close the Command Prompt window where n8n is running.
