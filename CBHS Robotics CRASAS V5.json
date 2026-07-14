@@ -15,10 +15,10 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1,
       "position": [
-        6832,
-        2176
+        -224,
+        64
       ],
-      "id": "064c243e-377f-4520-9e10-5403a8afbfca",
+      "id": "f8d32893-3638-4d66-a28c-78fe5fc7311c",
       "notes": "Runs every Monday 7am. Or trigger manually."
     },
     {
@@ -67,10 +67,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        7056,
-        2112
+        0,
+        0
       ],
-      "id": "1232b135-8c98-4e1c-85b6-df685c94df6f"
+      "id": "3d8eaea4-fc09-4d56-91b0-1450a43e53f3"
     },
     {
       "parameters": {
@@ -84,7 +84,7 @@
             },
             {
               "name": "q",
-              "value": "VEX Robotics competition 2025 2026"
+              "value": "VEX Robotics Competition 2026 2027 "
             },
             {
               "name": "type",
@@ -118,10 +118,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        7056,
-        2272
+        0,
+        160
       ],
-      "id": "b19876c5-423c-4794-9994-7167f97cb781"
+      "id": "5cad2565-fdf4-4078-a151-d3ba902ea8a5"
     },
     {
       "parameters": {},
@@ -129,10 +129,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 2,
       "position": [
-        7296,
-        2192
+        240,
+        80
       ],
-      "id": "3943b77c-a22c-47d1-9c41-44321d1796c4"
+      "id": "5edd162a-8bc6-44e5-9435-97ea997ac974"
     },
     {
       "parameters": {
@@ -142,10 +142,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        7520,
-        2192
+        464,
+        80
       ],
-      "id": "3cd078f1-3c8a-4725-947c-9c9e429bd661"
+      "id": "23e67de0-a5f3-46e2-aa79-7d42008fc9d1"
     },
     {
       "parameters": {
@@ -173,10 +173,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4,
       "position": [
-        7744,
-        2192
+        688,
+        80
       ],
-      "id": "931bc8c8-5c4c-4fc2-a260-d2fbae251ace"
+      "id": "b39038c6-b0fc-4350-bc00-1613734af695"
     },
     {
       "parameters": {
@@ -186,77 +186,78 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        7968,
-        2192
+        912,
+        80
       ],
-      "id": "b0ffdf04-ceb4-4613-bdcb-fb38e7ebc686",
+      "id": "67802a2d-fbb7-495a-955f-1e3a1b8df3b0",
       "notes": "Run Once for All Items. Flags videos over 18 min or under 10 sec as skipVideo."
     },
     {
       "parameters": {
-        "jsCode": "const allVideos = $input.all().map(i => i.json);\nallVideos.sort((a, b) => b.viewCount - a.viewCount);\nconst apiKey = 'YOUR_GEMINI_API_KEY';\n\n//Change this to be relevant for the current game and describe it in-depth\nconst prompt = `You are analysing VEX V5 robotics competition footage for the 2025-2026 season game called Push Back.\n\nPUSH BACK GAME DESCRIPTION: Push Back is played on a 12x12 foot field. The game elements are coloured blocks (not rings, not discs). The field contains clear vertical tubes called goals at three heights: two High Goals on each side of the field, one Mid Goal in the centre on top of the Low Goal, and one Low Goal in the centre below the Mid Goal. Robots score by pushing blocks into these tube goals. Each goal has a Control Bonus awarded to whichever alliance has more of their coloured blocks inside it. There is no climbing structure, no discs, no mobile goals, no rings, and no stakes. This is entirely different from previous VEX V5 seasons like High Stakes (2024-2025) which used rings and stakes, or Over Under (2023-2024) which used triballs.\n\nIf the footage shows rings, stakes, mobile goals, or a climbing ladder — it is NOT Push Back. If it shows VEX IQ robots — it is NOT Push Back. If unrelated to VEX robotics entirely — it is NOT Push Back.\n\nIf this is not Push Back 2025-2026 footage, respond with exactly: SKIP\n\nIf it IS Push Back footage, provide a dense technical caption of at least 400 words covering:\n(1) Robot mechanisms visible — drivetrain configuration, motor count, wheel type, block-handling mechanism type and design in detail\n(2) Block handling — estimated capacity, scoring speed, and which goals are being targeted\n(3) Autonomous routine structure — starting position, zones targeted, blocks scored, estimated auton score\n(4) Driver control strategies — cycling patterns, defensive plays, goal control tactics, endgame\n(5) Any novel or competitively significant design choices — explain why each matters competitively\n\nBe specific and technical. Every claim must be grounded in what is visible. Do not truncate your response.`;\n\nconst pushBackSignals = [\n  /push.?back/i,\n  /pushback/i,\n];\n\nfunction titleSuggestsPushBack(title) {\n  return pushBackSignals.some(p => p.test(title));\n}\n\nasync function geminiRequest(helpers, url, body, maxRetries = 4) {\n  let delay = 5000;\n  for (let attempt = 0; attempt <= maxRetries; attempt++) {\n    try {\n      return await helpers.httpRequest({\n        method: 'POST',\n        url,\n        headers: { 'Content-Type': 'application/json' },\n        body: JSON.stringify(body)\n      });\n    } catch (e) {\n      const shouldRetry = e.message.includes('503') || e.message.includes('429');\n      if (shouldRetry && attempt < maxRetries) {\n        await new Promise(r => setTimeout(r, delay));\n        delay *= 2;\n        continue;\n      }\n      throw e;\n    }\n  }\n}\n\nconst results = [];\nlet callCount = 0;\n\nfor (let i = 0; i < allVideos.length; i++) {\n  const video = allVideos[i];\n\n  if (video.skipVideo) {\n    results.push({ json: { ...video, visionCaption: 'SKIPPED: too long or too short.' } });\n    continue;\n  }\n\n  if (callCount >= 10) {\n    results.push({ json: { ...video, visionCaption: 'Not analysed — outside top 10.' } });\n    continue;\n  }\n\n  if (callCount > 0) await new Promise(r => setTimeout(r, 2000));\n\n  try {\n    const response = await geminiRequest(\n      this.helpers,\n      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,\n      {\n        contents: [{\n          parts: [\n            {\n              fileData: {\n                fileUri: `https://www.youtube.com/watch?v=${video.videoId}`,\n                mimeType: 'video/mp4'\n              }\n            },\n            {\n              text: prompt + `\\n\\nTitle: ${video.title}\\nDescription: ${video.description}`\n            }\n          ]\n        }],\n        generationConfig: {\n          temperature: 0.2,\n          maxOutputTokens: 8192\n        }\n      }\n    );\n\n    const caption = response?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || 'No caption returned.';\n    const isSkip = caption === 'SKIP' || caption.toUpperCase().startsWith('SKIP');\n    const forcedByTitle = titleSuggestsPushBack(video.title);\n\n    //Filtering depending on game\n    if (isSkip && !forcedByTitle) {\n      //Wrong game\n      results.push({ json: { ...video, visionCaption: 'SKIPPED: Gemini confirmed wrong game.' } });\n      continue;\n    }\n\n    if (isSkip && forcedByTitle) {\n      //Gemini says skip but force because title includes string\n      results.push({ json: { ...video, visionCaption: `NOTE: Gemini returned SKIP despite Push Back title — may be a reveal/teaser without gameplay. Title: ${video.title}` } });\n      callCount++;\n      continue;\n    }\n\n    results.push({ json: { ...video, visionCaption: caption } });\n    callCount++;\n\n  } catch (e) {\n    results.push({ json: { ...video, visionCaption: `Gemini error: ${e.message.slice(0, 200)}` } });\n    callCount++;\n  }\n}\n\nreturn results;"
+        "jsCode": "const allVideos = $input.all().map(i => i.json);\nallVideos.sort((a, b) => b.viewCount - a.viewCount);\nconst apiKey = 'YOUR_GEMINI_API_KEY';\n\n//Change this to be relevant for the current game and describe it in-depth\nconst prompt = `You are analysing VEX V5 Robotics Competition footage for the 2026–2027 game Override. Your task is to produce an evidence-based technical analysis for competitive scouting. Accuracy is more important than completeness. Never invent mechanisms, robot capabilities, or game rules.\n\nVERIFIED GAME DESCRIPTION\nOverride is played on a 12x12 foot field. Two alliances of two teams compete in a 15-second Autonomous Period followed by a 1:45 Driver Controlled Period. Game objects are Pins (red/yellow, blue/yellow, or yellow/yellow) and Cups (clear or grey). Pins are nested inside Cups, and Cups are nested inside Goals.\nThere are 9 Goals: 2 Red, 2 Blue, 4 Short Neutral, and 1 Tall Neutral Goal located in the Midfield.\nThe field contains four Quadrants. Each Quadrant contains one Toggle on the Field Perimeter that determines ownership of Yellow Pins located in that Quadrant. The Midfield contains the Tall Neutral Goal. Yellow Pins in the Midfield are owned by whichever Alliance has more Robots in the Midfield at the end of the Match.\nScoring: Autonomous Bonus = 12pts; Alliance-coloured Pin half = 5pts when Placed; Owned Yellow Pin = 10pts; Robot ending in the Midfield = 8pts.\n\nCRITICAL RULE CONSTRAINTS & ANTI-HALLUCINATION\n- POSSESSION RULE: A Robot may legally possess at most ONE Pin and ONE Cup simultaneously. Do not describe designs that would require illegal simultaneous possession (e.g., \"dual-storage intake holding two Cups\" or \"internal Pin queues\").\n- NO UNSEEN MECHANISMS: Describe ONLY what is definitely present and visibly functioning. Never infer hidden internal gearing, hidden pneumatics, or sensor types.\n- If this footage shows rings, stakes, mobile goals, triballs, blocks, or VEX IQ robots, it is NOT Override.\n\nIf this is not Override 2026-2027 footage, respond with exactly: SKIP\n\nIf it IS Override footage, provide a dense technical caption of at least 400 words. \nThe first line of your response must be exactly: \"VIDEO TYPE: [Classification]\"\n\n(1) Video Classification: Classify the video into exactly ONE category based on priority: 1. Official Reveal / Rules, 2. CAD / Design Concept, 3. Prototype / Bench Testing, 4. Competition Footage.\n(2) Robot Mechanisms Visible: Drivetrain configuration, wheel type, Pin/Cup handling mechanism. Use strict evidence. GOOD: \"A roller intake is visible.\" BAD: \"Uses 6 motors\" (unless directly visible).\n(3) Scoring Object Handling: How the robot physically picks up, carries, and places Pins and Cups. Explicitly state if it handles one Pin, one Cup, or one of each legally.\n(4) Toggle Interaction: Does the robot interact with Toggles? How?\n(5) Autonomous/Driver Strategies: Zones targeted, Midfield engagement, defensive plays.\n\nBe brutally literal. Every claim must be grounded in what is visually verifiable. Do not truncate your response.`;\n\nconst pushBackSignals = [\n  /push.?back/i,\n  /pushback/i,\n];\n\nfunction titleSuggestsPushBack(title) {\n  return pushBackSignals.some(p => p.test(title));\n}\n\nasync function geminiRequest(helpers, url, body, maxRetries = 4) {\n  let delay = 5000;\n  for (let attempt = 0; attempt <= maxRetries; attempt++) {\n    try {\n      return await helpers.httpRequest({\n        method: 'POST',\n        url,\n        headers: { 'Content-Type': 'application/json' },\n        body: JSON.stringify(body)\n      });\n    } catch (e) {\n      const shouldRetry = e.message.includes('503') || e.message.includes('429');\n      if (shouldRetry && attempt < maxRetries) {\n        await new Promise(r => setTimeout(r, delay));\n        delay *= 2;\n        continue;\n      }\n      throw e;\n    }\n  }\n}\n\nconst results = [];\nlet callCount = 0;\n\nfor (let i = 0; i < allVideos.length; i++) {\n  const video = allVideos[i];\n\n  if (video.skipVideo) {\n    results.push({ json: { ...video, visionCaption: 'SKIPPED: too long or too short.' } });\n    continue;\n  }\n\n  if (callCount >= 10) {\n    results.push({ json: { ...video, visionCaption: 'Not analysed — outside top 10.' } });\n    continue;\n  }\n\n  if (callCount > 0) await new Promise(r => setTimeout(r, 2000));\n\n  try {\n    const response = await geminiRequest(\n      this.helpers,\n      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,\n      {\n        contents: [{\n          parts: [\n            {\n              fileData: {\n                fileUri: `https://www.youtube.com/watch?v=${video.videoId}`,\n                mimeType: 'video/mp4'\n              }\n            },\n            {\n              text: prompt + `\\n\\nTitle: ${video.title}\\nDescription: ${video.description}`\n            }\n          ]\n        }],\n        generationConfig: {\n          temperature: 0.2,\n          maxOutputTokens: 8192\n        }\n      }\n    );\n\n    const caption = response?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || 'No caption returned.';\n    const isSkip = caption === 'SKIP' || caption.toUpperCase().startsWith('SKIP');\n    const forcedByTitle = titleSuggestsPushBack(video.title);\n\n//Filtering depending on game\n    if (isSkip && !forcedByTitle) {\n      //Wrong game\n      results.push({ json: { ...video, visionCaption: 'SKIPPED: Gemini confirmed wrong game.' } });\n      continue;\n    }\n\n    if (isSkip && forcedByTitle) {\n      //Gemini says skip but force because title includes string\n      results.push({ json: { ...video, visionCaption: `NOTE: Gemini returned SKIP despite Push Back title — may be a reveal/teaser without gameplay. Title: ${video.title}` } });\n      callCount++;\n      continue;\n    }\n\n    results.push({ json: { ...video, visionCaption: caption } });\n    callCount++;\n\n  } catch (e) {\n    results.push({ json: { ...video, visionCaption: `Gemini error: ${e.message.slice(0, 200)}` } });\n    callCount++;\n  }\n}\n\nreturn results;"
       },
       "name": "Gemini Vision Caption",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        7296,
-        2432
+        240,
+        320
       ],
-      "id": "07848a8e-1389-42c9-89df-7cea48ebbd75",
-      "notes": "Calls Gemini with the YouTube URL directly. Skips videos flagged as too long/short."
+      "id": "0bc3bad4-e917-4531-b205-adcb458b1abd",
+      "notes": "Calls Gemini 2.0 Flash with the YouTube URL directly. No download needed. Skips videos flagged as too long/short."
     },
     {
       "parameters": {
-        "jsCode": "const videoList = $input.first().json.videoList;\nconst apiKey = 'YOUR_GEMINI_API_KEY';\n\n//Always make sure to update your prompt depending on the game, as otherwise data in the final report may include stuff from older games\nconst systemPrompt = 'You are an expert VEX V5 Push Back competition analyst writing for a senior competitive team preparing for elimination rounds. Push Back (2025-2026) involves robots transporting coloured blocks (red or blue) around into clear tubes, which are at three heights, the high goals (2 on each side of the field), the mid goal (one in the centre on top of the low goal) and the low goal one in the centre under the mid goal) each tube has a control bonus, which is given to a team if they have the greatest number of their (red or blue) coloured blocks in it compared with the other alliances colour. There are no discs, no alliance specific scoring and no climbing. Do not reference game elements from other VEX seasons. Your audience understands the game — do not explain it. Analyse only what is grounded in the Vision Analysis fields. Every claim must reference a specific video. Be brutally specific. Vague observations have no value. Skip any video not in English or not clearly showing Push Back competition robots.';\n\nconst userPrompt = `Videos from this week:\\n\\n${videoList}\\n\\nWrite a brutally specific weekly meta report in GitHub-flavoured Markdown. Every claim must be grounded in specific video evidence, prioritising the Vision Analysis fields where available. If a video is not in English or not clearly Push Back competition footage, skip it entirely.\\n\\nOutput the report body only — no title, no date header, no preamble. Start directly with the Table of Contents, then the sections.\\n\\nUse this exact Table of Contents block at the very top:\\n\\n## Contents\\n- [Executive Summary](#1-executive-summary)\\n- [Mechanism Analysis](#2-mechanism-analysis)\\n- [Autonomous Routine Trends](#3-autonomous-routine-trends)\\n- [Driver Control Tactics](#4-driver-control-tactics)\\n- [High-Value Teams and Channels](#5-high-value-teams-and-channels)\\n- [Novelty Flags](#6-novelty-flags)\\n- [Recommended Watch List](#7-recommended-watch-list)\\n- [Meta Trajectory](#8-meta-trajectory)\\n\\nThen write each section with these exact headings (so anchor links resolve correctly):\\n## 1. Executive Summary\\n## 2. Mechanism Analysis\\n## 3. Autonomous Routine Trends\\n## 4. Driver Control Tactics\\n## 5. High-Value Teams and Channels\\n## 6. Novelty Flags\\n## 7. Recommended Watch List\\n## 8. Meta Trajectory\\n\\n### Section content requirements:\\n\\n**1. Executive Summary** (4-6 sentences)\\nWhat shifted in the meta this week? What is the dominant strategic or mechanical story? What should a competitive team act on immediately?\\n\\n**2. Mechanism Analysis**\\nFor each notable mechanism observed, specify:\\n- Exact mechanism type and configuration\\n- Which video(s) demonstrate it — cite the YouTube video ID exactly as shown in the VIDEO_ID tag for each video (e.g. Demonstrated in: dQw4w9WgXcQ, 3mPeTa2zAk8), not the index number in brackets\\n- Estimated ball capacity or cycle speed if visible\\n- Competitive advantage or weakness\\n- Whether this is emerging, established, or declining in the meta\\n\\n**3. Autonomous Routine Trends**\\nSpecific autonomous paths observed. Which zones are being prioritised? What is the highest-scoring auton structure appearing this week? Name the teams or channels demonstrating it.\\n\\n**4. Driver Control Tactics**\\nSpecific strategies observed in driver control periods. Cycle times if estimable. Defensive patterns. Endgame execution. Name specific videos.\\n\\n**5. High-Value Teams and Channels**\\nOnly include channels producing genuine competition footage or high-level technical content. For each: team number if visible, region if identifiable, what makes their content worth watching, specific video titles.\\n\\n**6. Novelty Flags**\\nMechanisms, strategies, or configurations not seen in previous weeks. Be specific. Explain why it matters competitively. If nothing is genuinely novel this week, say so plainly.\\n\\n**7. Recommended Watch List**\\nExactly 5 videos. For each: full title, channel, and a single specific sentence explaining what competitive insight it provides.\\n\\n**8. Meta Trajectory**\\nOne paragraph: where is the VEX V5 Push Back meta heading based on this week's content? What should a team build or practice before the next competition?`;\n\ntry {\n  const response = await this.helpers.httpRequest({\n    method: 'POST',\n    url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,\n    headers: { 'Content-Type': 'application/json' },\n    body: JSON.stringify({\n      system_instruction: { parts: [{ text: systemPrompt }] },\n      contents: [{ parts: [{ text: userPrompt }] }],\n      generationConfig: { temperature: 0.3, maxOutputTokens: 8192 }\n    })\n  });\n\n  const analysis = response?.candidates?.[0]?.content?.parts?.[0]?.text || 'Error: no response from Gemini.';\n  return [{ json: { ...($input.first().json), analysis } }];\n\n} catch (e) {\n  return [{ json: { ...($input.first().json), analysis: `Gemini error: ${e.message.slice(0, 300)}` } }];\n}"
+        "jsCode": "const videoList = $input.first().json.videoList;\nconst apiKey = 'YOUR_GEMINI_API_KEY';\n\n//Always make sure to update your prompt depending on the game, as otherwise data in the final report may include stuff from older games\nconst systemPrompt = 'You are an expert VEX V5 Override analyst writing weekly intelligence reports for a highly competitive team[cite: 234]. Your objective is to identify genuine competitive trends while remaining completely evidence-based[cite: 235]. Override (2026-2027) involves two alliances stacking Pins into Cups and Goals[cite: 236]. There are 9 Goals, 4 Toggles dictating Quadrant Pin ownership, and a contested Midfield[cite: 237]. CRITICAL DIRECTIVES:1. VIDEO PRIORITY: Treat evidence using this priority: Reveal/CAD > Prototype > Competition Footage[cite: 238]. Do not treat CAD concepts as proven competitive designs. Do not treat prototypes as validated match strategies[cite: 239].2. STRICT POSSESSION LIMIT: Robots may possess a maximum of ONE Pin and ONE Cup at a time[cite: 240]. Reject and do not report any data suggesting storage systems that exceed legal possession unless the video explicitly discusses a legal interpretation from the Game Manual[cite: 241].3. NO EXTERNAL KNOWLEDGE: You must ONLY analyze and aggregate the information explicitly provided in the users \"Videos from this week\" data[cite: 242]. The Vision Analysis field is your primary source[cite: 243]. 4. EVIDENCE RULES: Every technical claim must be supported by at least one specific video[cite: 244]. If a claim is only demonstrated in CAD or on a workbench, say so[cite: 245]. Do not fill gaps with speculation. If evidence is insufficient, state \"Insufficient data this week.\" [cite: 246] 5. CITATIONS: Every single claim must cite the exact VIDEO_ID provided in the input text[cite: 247].';\n\nconst userPrompt = `Videos from this week:\\n\\n${videoList}\\n\\n\n\nWrite a brutally specific weekly meta report in GitHub-flavoured Markdown based STRICTLY on the provided video list[cite: 248]. Output the report body only — no title, no date header, no preamble[cite: 249]. Start directly with the Table of Contents, then the sections[cite: 250].\n\nUse this exact Table of Contents block at the very top:\n\n## Contents\n- [Executive Summary](#1-executive-summary)\n- [Mechanism Analysis](#2-mechanism-analysis)\n- [Autonomous Routine Trends](#3-autonomous-routine-trends)\n- [Driver Control Tactics](#4-driver-control-tactics)\n- [High-Value Teams and Channels](#5-high-value-teams-and-channels)\n- [Novelty Flags](#6-novelty-flags)\n- [Recommended Watch List](#7-recommended-watch-list)\n- [Meta Trajectory](#8-meta-trajectory)\n\nThen write each section with these exact headings:\n## 1. Executive Summary\n## 2. Mechanism Analysis\n## 3. Autonomous Routine Trends\n## 4. Driver Control Tactics\n## 5. High-Value Teams and Channels\n## 6. Novelty Flags\n## 7. Recommended Watch List\n## 8. Meta Trajectory\n\n### Section content requirements:\n\n**1. Executive Summary** (4-6 sentences)\nWhat shifted in the meta this week based ONLY on the provided videos? [cite: 251] What is the dominant mechanical story seen in the data? Differentiate clearly between what is Observed, Shown in CAD, or Prototype capability[cite: 252].\n\n**2. Mechanism Analysis**\nFor each notable mechanism observed in the data, specify:\n- Exact mechanism type and configuration[cite: 253].\n- Which video(s) demonstrate it — cite the YouTube video ID exactly as shown in the VIDEO_ID tag for each video[cite: 254].\n- Verified Pin/Cup capacity (ensuring it adheres to the 1 Pin/1 Cup rule)[cite: 255].\n- Competitive advantage[cite: 255].\n\n**3. Autonomous Routine Trends**\nSpecific autonomous paths observed in the data. Which Goals and Quadrants are prioritized? [cite: 256] Name the teams/channels demonstrating it (must exist in the provided data)[cite: 257].\n\n**4. Driver Control Tactics**\nSpecific strategies observed during Driver Control. Toggle flipping tactics, stack-building patterns, Midfield endgame execution[cite: 258]. Name specific video IDs[cite: 259].\n\n**5. High-Value Teams and Channels**\nList channels from the data producing high-level technical content[cite: 259]. Include specific video titles and why they matter[cite: 260].\n\n**6. Novelty Flags**\nMechanisms or strategies seen this week that stand out[cite: 260]. If nothing is novel in the provided data, state \"No novel mechanisms observed this week.\" [cite: 261]\n\n**7. Recommended Watch List**\nSelect up to 5 videos from the provided data[cite: 262]. For each: full title, channel, and a single specific sentence explaining the insight it provides[cite: 263].\n\n**8. Meta Trajectory**\nOne paragraph: Based strictly on this week's aggregated footage, where is the Override meta heading? [cite: 264]`;\n\ntry {\n  const response = await this.helpers.httpRequest({\n    method: 'POST',\n    url: `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,\n    headers: { 'Content-Type': 'application/json' },\n    body: JSON.stringify({\n      system_instruction: { parts: [{ text: systemPrompt }] },\n      contents: [{ parts: [{ text: userPrompt }] }],\n      generationConfig: { temperature: 0.3, maxOutputTokens: 8192 }\n    })\n  });\n\n  const analysis = response?.candidates?.[0]?.content?.parts?.[0]?.text || 'Error: no response from Gemini.';\n  return [{ json: { ...($input.first().json), analysis } }];\n\n} catch (e) {\n  return [{ json: { ...($input.first().json), analysis: `Gemini error: ${e.message.slice(0, 300)}` } }];\n}"
       },
       "name": "Prompt and Summary",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        7744,
-        2432
+        688,
+        320
       ],
-      "id": "bb38cba7-a0c3-4a10-9c90-884048f7d77c"
+      "id": "a1e2b9cc-4672-41c2-900c-70272fda602a",
+      "notes": "Now uses Gemini 2.5 Flash for report generation instead of local llama-server."
     },
     {
       "parameters": {
-        "jsCode": "const raw = $input.item.json;\nconst report = raw.analysis || 'Error: no response from model';\nconst weekOf = $('Aggregate').item.json.weekOf;\n\nconst pdfConfig = `---\npdf_options:\n  margin:\n    top: 0\n    right: 0\n    bottom: 0\n    left: 0\n  format: A4\n  printBackground: true\npage_media_type: print\n---\n\n`;\n\nconst banner = `<div style=\"background:#000000; padding:28px 32px 22px; font-family:Arial,Helvetica,sans-serif;\">\n<p style=\"font-size:11px; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:#263faf; margin:0 0 6px 0;\">CRASAS · CBHS 2976A</p>\n<h1 style=\"font-size:26px; font-weight:700; color:#ffffff; line-height:1.1; margin:0 0 4px 0;\">VEX V5 Push Back — Intelligence Report</h1>\n<div style=\"width:40px; height:3px; background:#263faf; margin:10px 0;\"></div>\n<p style=\"font-size:14px; color:#888888; margin:0 0 2px 0;\">Week of ${weekOf}</p>\n<p style=\"font-size:11px; color:#444444; margin:8px 0 0 0;\">Generated by CBHS Robotics CRASAS V5 · Christchurch Boys' High School</p>\n</div>\n\n`;\n\nconst tocHTML = `<div style=\"background:#111111; padding:16px 32px; border-left:3px solid #263faf; font-family:Arial,Helvetica,sans-serif;\">\n<p style=\"font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#555555; margin:0 0 8px 0;\">Contents</p>\n<p style=\"font-size:13px; color:#cccccc; margin:3px 0;\"><span style=\"font-size:11px; font-weight:700; color:#263faf; margin-right:8px;\">01</span><a href=\"#executive-summary\" style=\"color:#cccccc; text-decoration:none;\">Executive Summary</a></p>\n<p style=\"font-size:13px; color:#cccccc; margin:3px 0;\"><span style=\"font-size:11px; font-weight:700; color:#263faf; margin-right:8px;\">02</span><a href=\"#mechanism-analysis\" style=\"color:#cccccc; text-decoration:none;\">Mechanism Analysis</a></p>\n<p style=\"font-size:13px; color:#cccccc; margin:3px 0;\"><span style=\"font-size:11px; font-weight:700; color:#263faf; margin-right:8px;\">03</span><a href=\"#autonomous-routine-trends\" style=\"color:#cccccc; text-decoration:none;\">Autonomous Routine Trends</a></p>\n<p style=\"font-size:13px; color:#cccccc; margin:3px 0;\"><span style=\"font-size:11px; font-weight:700; color:#263faf; margin-right:8px;\">04</span><a href=\"#driver-control-tactics\" style=\"color:#cccccc; text-decoration:none;\">Driver Control Tactics</a></p>\n<p style=\"font-size:13px; color:#cccccc; margin:3px 0;\"><span style=\"font-size:11px; font-weight:700; color:#263faf; margin-right:8px;\">05</span><a href=\"#high-value-teams-and-channels\" style=\"color:#cccccc; text-decoration:none;\">High-Value Teams and Channels</a></p>\n<p style=\"font-size:13px; color:#cccccc; margin:3px 0;\"><span style=\"font-size:11px; font-weight:700; color:#263faf; margin-right:8px;\">06</span><a href=\"#novelty-flags\" style=\"color:#cccccc; text-decoration:none;\">Novelty Flags</a></p>\n<p style=\"font-size:13px; color:#cccccc; margin:3px 0;\"><span style=\"font-size:11px; font-weight:700; color:#263faf; margin-right:8px;\">07</span><a href=\"#recommended-watch-list\" style=\"color:#cccccc; text-decoration:none;\">Recommended Watch List</a></p>\n<p style=\"font-size:13px; color:#cccccc; margin:3px 0;\"><span style=\"font-size:11px; font-weight:700; color:#263faf; margin-right:8px;\">08</span><a href=\"#meta-trajectory\" style=\"color:#cccccc; text-decoration:none;\">Meta Trajectory</a></p>\n</div>\n\n<div style=\"padding: 24px 32px; font-family: Arial, Helvetica, sans-serif;\">\n\n`;\n\nconst bodyWithoutToc = report.replace(/##\\s*Contents[\\s\\S]*?(?=\\n##\\s)/i, '');\nconst cleanedBody = bodyWithoutToc.replace(/^(#{1,3})\\s+\\d+\\.\\s+/gm, '$1 ');\n\nreturn [{\n  json: {\n    report: pdfConfig + banner + tocHTML + cleanedBody + '\\n\\n</div>',\n    weekOf,\n    filename: `CRASAS_REPORT--${weekOf}.md`\n  }\n}];"
+        "jsCode": "const raw = $input.item.json;\nconst report = raw.analysis || 'Error: no response from model';\nconst weekOf = $('Aggregate').item.json.weekOf;\n\nconst pdfConfig = `---\npdf_options:\n  margin:\n    top: 0\n    right: 0\n    bottom: 0\n    left: 0\n  format: A4\n  printBackground: true\n---\n\n`;\n\nconst banner = `<div style=\"background:#000000; padding:28px 32px 22px; font-family:Arial,Helvetica,sans-serif;\">\n<p style=\"font-size:11px; font-weight:700; letter-spacing:3px; text-transform:uppercase; color:#263faf; margin:0 0 6px 0;\">CRASAS · CBHS 2976A</p>\n<h1 style=\"font-size:26px; font-weight:700; color:#ffffff; line-height:1.1; margin:0 0 4px 0;\">VEX V5 Override — Intelligence Report</h1>\n<div style=\"width:40px; height:3px; background:#263faf; margin:10px 0;\"></div>\n<p style=\"font-size:14px; color:#888888; margin:0 0 2px 0;\">Week of ${weekOf}</p>\n<p style=\"font-size:11px; color:#444444; margin:8px 0 0 0;\">Generated by CBHS Robotics CRASAS · Christchurch Boys' High School</p>\n</div>\n\n`;\n\nconst tocHTML = `<div style=\"background:#111111; padding:16px 32px; border-left:3px solid #263faf; font-family:Arial,Helvetica,sans-serif;\">\n<p style=\"font-size:10px; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#555555; margin:0 0 8px 0;\">Contents</p>\n<p style=\"font-size:13px; color:#cccccc; margin:3px 0;\"><span style=\"font-size:11px; font-weight:700; color:#263faf; margin-right:8px;\">01</span><a href=\"#executive-summary\" style=\"color:#cccccc; text-decoration:none;\">Executive Summary</a></p>\n<p style=\"font-size:13px; color:#cccccc; margin:3px 0;\"><span style=\"font-size:11px; font-weight:700; color:#263faf; margin-right:8px;\">02</span><a href=\"#mechanism-analysis\" style=\"color:#cccccc; text-decoration:none;\">Mechanism Analysis</a></p>\n<p style=\"font-size:13px; color:#cccccc; margin:3px 0;\"><span style=\"font-size:11px; font-weight:700; color:#263faf; margin-right:8px;\">03</span><a href=\"#autonomous-routine-trends\" style=\"color:#cccccc; text-decoration:none;\">Autonomous Routine Trends</a></p>\n<p style=\"font-size:13px; color:#cccccc; margin:3px 0;\"><span style=\"font-size:11px; font-weight:700; color:#263faf; margin-right:8px;\">04</span><a href=\"#driver-control-tactics\" style=\"color:#cccccc; text-decoration:none;\">Driver Control Tactics</a></p>\n<p style=\"font-size:13px; color:#cccccc; margin:3px 0;\"><span style=\"font-size:11px; font-weight:700; color:#263faf; margin-right:8px;\">05</span><a href=\"#high-value-teams-and-channels\" style=\"color:#cccccc; text-decoration:none;\">High-Value Teams and Channels</a></p>\n<p style=\"font-size:13px; color:#cccccc; margin:3px 0;\"><span style=\"font-size:11px; font-weight:700; color:#263faf; margin-right:8px;\">06</span><a href=\"#novelty-flags\" style=\"color:#cccccc; text-decoration:none;\">Novelty Flags</a></p>\n<p style=\"font-size:13px; color:#cccccc; margin:3px 0;\"><span style=\"font-size:11px; font-weight:700; color:#263faf; margin-right:8px;\">07</span><a href=\"#recommended-watch-list\" style=\"color:#cccccc; text-decoration:none;\">Recommended Watch List</a></p>\n<p style=\"font-size:13px; color:#cccccc; margin:3px 0;\"><span style=\"font-size:11px; font-weight:700; color:#263faf; margin-right:8px;\">08</span><a href=\"#meta-trajectory\" style=\"color:#cccccc; text-decoration:none;\">Meta Trajectory</a></p>\n</div>\n\n<div style=\"padding: 24px 32px; font-family: Arial, Helvetica, sans-serif;\">\n\n`;\n\nconst bodyWithoutToc = report.replace(/##\\s*Contents[\\s\\S]*?(?=\\n##\\s)/i, '');\nconst cleanedBody = bodyWithoutToc.replace(/^(#{1,3})\\s+\\d+\\.\\s+/gm, '$1 ');\n\nreturn [{\n  json: {\n    report: pdfConfig + banner + tocHTML + cleanedBody + '\\n\\n</div>',\n    weekOf,\n    filename: `CRASAS_REPORT--${weekOf}.md`\n  }\n}];"
       },
       "name": "Format Report",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        7968,
-        2432
+        912,
+        320
       ],
-      "id": "d706f4f9-3fd5-4d46-b704-c6367ddbd4b5"
+      "id": "d3caf295-d5d4-4637-9969-948520d820c6"
     },
     {
       "parameters": {
-        "jsCode": "const fs = require('fs');\nconst os = require('os');\nconst path = require('path');\nconst { execSync } = require('child_process');\n\n//Change your filepath to where you want reports saved\nconst reportsDir = '/Path/To/Your/Folder';\nif (!fs.existsSync(reportsDir)) fs.mkdirSync(reportsDir, { recursive: true });\n\nconst { report, filename } = $input.item.json;\nconst mdPath = path.join(reportsDir, filename);\nconst pdfPath = mdPath.replace(/\\.md$/, '.pdf');\n\n//Save markdown\nfs.writeFileSync(mdPath, report, 'utf8');\n\n//Convert to PDF\nlet pdfSaved = false;\nlet pdfError = null;\ntry {\n  execSync(`md-to-pdf \"${mdPath}\"`, { timeout: 30000 });\n  pdfSaved = true;\n} catch (e) {\n  pdfError = e.message.slice(0, 200);\n}\n\nreturn [{\n  json: {\n    saved: true,\n    mdPath,\n    pdfPath: pdfSaved ? pdfPath : null,\n    pdfSaved,\n    pdfError,\n    message: pdfSaved\n      ? `MD and PDF saved to ${reportsDir}`\n      : `MD saved, PDF failed: ${pdfError}`\n  }\n}];"
+        "jsCode": "const fs = require('fs');\nconst os = require('os');\nconst path = require('path');\nconst { execSync } = require('child_process');\n\n// TODO: Change this path to the directory where you want the final report saved\nconst reportsDir = 'YOUR/SAVE/DIRECTORY/PATH';\nif (!fs.existsSync(reportsDir)) fs.mkdirSync(reportsDir, { recursive: true });\n\nconst { report, filename } = $input.item.json;\nconst mdPath = path.join(reportsDir, filename);\nconst pdfPath = mdPath.replace(/\\.md$/, '.pdf');\n\n//Save markdown\nfs.writeFileSync(mdPath, report, 'utf8');\n\n//Convert to PDF\nlet pdfSaved = false;\nlet pdfError = null;\ntry {\n  execSync(`md-to-pdf \"${mdPath}\"`, { timeout: 30000 });\n  pdfSaved = true;\n} catch (e) {\n  pdfError = e.message.slice(0, 200);\n}\n\nreturn [{\n  json: {\n    saved: true,\n    mdPath,\n    pdfPath: pdfSaved ? pdfPath : null,\n    pdfSaved,\n    pdfError,\n    message: pdfSaved\n      ? `MD and PDF saved to ${reportsDir}`\n      : `MD saved, PDF failed: ${pdfError}`\n  }\n}];"
       },
       "name": "Save Report Locally",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        8192,
-        2432
+        1136,
+        320
       ],
-      "id": "ee3f2490-2c1a-43c1-93f5-8baf6ed21c6d"
+      "id": "700aa79e-631b-4cd9-b8dd-7a8fe914ddc9"
     },
     {
       "parameters": {
-        "jsCode": "const allVideos = $input.all().map(i => i.json);\nallVideos.sort((a, b) => b.viewCount - a.viewCount);\n\nconst d = new Date();\nconst day = String(d.getDate()).padStart(2, '0');\nconst month = String(d.getMonth() + 1).padStart(2, '0');\nconst year = String(d.getFullYear()).slice(-2);\n\nconst videoList = allVideos.map((v, idx) => {\n  const dur = v.duration.replace('PT','').replace('H',' hr ').replace('M',' min ').replace('S',' sec');\n  return `[${idx + 1}] \"${v.title}\" [VIDEO_ID: ${v.videoId}]\\n` +\n         `    Channel: ${v.channelTitle} | Views: ${v.viewCount.toLocaleString()} | Duration: ${dur}\\n` +\n         `    Published: ${v.publishedAt}\\n` +\n         `    Description: ${v.description}\\n` +\n         `    Vision Analysis: ${v.visionCaption || 'Not analysed'}\\n`;\n}).join('\\n');\n\nreturn [{\n  json: {\n    videoCount: allVideos.length,\n    //Change date format here from DD-MM-YY to others if preferred\n    weekOf: `${day}-${month}-${year}`,\n    videoList\n  }\n}];"
+        "jsCode": "const allVideos = $input.all().map(i => i.json);\nallVideos.sort((a, b) => b.viewCount - a.viewCount);\n\nconst d = new Date();\nconst day = String(d.getDate()).padStart(2, '0');\nconst month = String(d.getMonth() + 1).padStart(2, '0');\nconst year = String(d.getFullYear()).slice(-2);\n\nconst videoList = allVideos.map((v, idx) => {\n  const dur = v.duration.replace('PT','').replace('H',' hr ').replace('M',' min ').replace('S',' sec');\n  return `[${idx + 1}] \"${v.title}\" [VIDEO_ID: ${v.videoId}]\\n` +\n         `    Channel: ${v.channelTitle} | Views: ${v.viewCount.toLocaleString()} | Duration: ${dur}\\n` +\n         `    Published: ${v.publishedAt}\\n` +\n         `    Description: ${v.description}\\n` +\n         `    Vision Analysis: ${v.visionCaption || 'Not analysed'}\\n`;\n}).join('\\n');\n\nreturn [{\n  json: {\n    videoCount: allVideos.length,\n    //Change date format here from DD/MM/YY to others\n    weekOf: `${day}-${month}-${year}`,\n    videoList\n  }\n}];"
       },
       "name": "Aggregate",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        7520,
-        2432
+        464,
+        320
       ],
-      "id": "15073eed-f717-407d-8e3d-14742c303997"
+      "id": "f55be051-2e25-4651-9ec5-25771cf13d0f"
     }
   ],
   "pinData": {},
@@ -354,17 +355,6 @@
         ]
       ]
     },
-    "Aggregate": {
-      "main": [
-        [
-          {
-            "node": "Prompt and Summary",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Prompt and Summary": {
       "main": [
         [
@@ -386,17 +376,29 @@
           }
         ]
       ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Prompt and Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
-  "active": false,
+  "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "00000000-0000-0000-0000-000000000000",
+  "versionId": "7bf4d8ed-e059-44aa-a281-ed3a2c48b1c1",
   "meta": {
-    "instanceId": "00000000000000000000000000000000000000000000000000000000000000000000000000000000"
+    "instanceId": "1a69bb1556865eb2e0701ecafdfa57d6b43cf791a76239fb0e5a929b7b51a223"
   },
-  "id": "00000000000000",
+  "nodeGroups": [],
+  "id": "WAZ2E2hQnMz66eS0",
   "tags": []
 }
